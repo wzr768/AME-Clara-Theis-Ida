@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import linalg as la
 from tabulate import tabulate
+from scipy.stats import chi2
 
 
 def estimate( 
@@ -212,3 +213,20 @@ def remove_zero_columns(x, label_x):
     # Get the labels for the columns that are not all zeros
     label_nonzero = [label_x[i] for i in range(len(label_x)) if nonzero_cols[i]]
     return x_nonzero, label_nonzero
+
+def wald_test(b_hat, cov, R, r):
+    """
+    Performs the Wald test for the hypothesis R @ b_hat = r.
+    """
+    
+    # Calculate the Wald test statistic
+    w_stat = ((R @ b_hat - r).T @ la.inv(R @ cov @ R.T) @ (R @ b_hat - r))
+    
+    # Degrees of freedom is the number of restrictions (number of rows in R)
+    df = R.shape[0]
+    
+    # Calculate p-value and critical value
+    crit_val = chi2.ppf(0.95, df)
+    p_value = 1 - chi2.cdf(w_stat.item(), df)
+    
+    return w_stat, crit_val, p_value
