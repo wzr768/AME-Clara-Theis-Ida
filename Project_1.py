@@ -188,41 +188,27 @@ def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     return Z
 
-
-def load_example_data():
-    # First, import the data into numpy.
-    data = np.loadtxt('wagepan.txt', delimiter=",")
-    id_array = np.array(data[:, 0])
-
-    # Count how many persons we have. This returns a tuple with the 
-    # unique IDs, and the number of times each person is observed.
-    unique_id = np.unique(id_array, return_counts=True)
-    T = int(unique_id[1].mean())
-    year = np.array(data[:, 1], dtype=int)
-
-    # Load the rest of the data into arrays.
-    y = np.array(data[:, 8]).reshape(-1, 1)
-    x = np.array(
-        [np.ones((y.shape[0])),
-            data[:, 3],
-            data[:, 9],
-            data[:, 7],
-            data[:, 5],
-            data[:, 6],
-            data[:, 4],
-            data[:, 2]]
-    ).T
-
-    # Lets also make some variable names
-    label_y = 'Log wage'
-    label_x = [
-        'Constant', 
-        'Experience', 
-        'Experience sqr', 
-        'Union',
-        'Married', 
-        'Education', 
-        'Hispanic', 
-        'Black', 
-    ]
-    return y, x, T, year, label_y, label_x
+def remove_zero_columns(x, label_x):
+    """
+    The function removes columns from a matrix that are all zeros and returns the updated matrix and
+    corresponding labels.
+    
+    Args:
+      x: The parameter `x` is a numpy array representing a matrix with columns that may contain zeros.
+      label_x: The parameter `label_x` is a list that contains the labels for each column in the input
+    array `x`.
+    
+    Returns:
+      x_nonzero: numpy array of x with columns that are all zeros removed.
+      label_nonzero: list of labels for each column in x_nonzero.
+    """
+    
+    # Find the columns that are not all zeros
+    nonzero_cols = ~np.all(x == 0, axis=0)
+    
+    # Remove the columns that are all zeros
+    x_nonzero = x[:, nonzero_cols]
+    
+    # Get the labels for the columns that are not all zeros
+    label_nonzero = [label_x[i] for i in range(len(label_x)) if nonzero_cols[i]]
+    return x_nonzero, label_nonzero
