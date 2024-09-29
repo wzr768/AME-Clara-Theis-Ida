@@ -24,6 +24,8 @@ def estimate(
             're': Random effects estimation.
         >>t (int, optional): If panel data, t is the number of time periods in
         the panel, and is used for estimating the variance. Defaults to None.
+        >> robust_se (bool): Calculates robust standard errors if True.
+        Defaults to False.
 
     Returns:
         list: Returns a dictionary with the following variables:
@@ -38,7 +40,7 @@ def estimate(
 
     sigma2, cov, se = variance(transform, SSR, x, T)
     if robust_se:
-        cov, se = robust(x, resid, T)
+        cov, se = robust(x, residual, T)
     t_values = b_hat/se
     
     names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov']
@@ -109,7 +111,7 @@ def variance(
     se = np.sqrt(cov.diagonal()).reshape(-1, 1)
     return sigma2, cov, se
 
-def robust(x: np.array, residual: np.array, T:int) -> tuple:
+def robust( x: np.ndarray, residual: np.ndarray, T:int) -> tuple:
     '''Calculates the robust variance estimator 
 
     Args: 
@@ -125,13 +127,13 @@ def robust(x: np.array, residual: np.array, T:int) -> tuple:
             cov: (K,K) panel-robust covariance matrix 
             se: (K,1) vector of panel-robust standard errors
     '''
-    
-    # If only cross sectional, we can easily use the diagonal.
-    if not T:
-        Ainv = la.inv(x.T @ x)
+
+    # If only cross sectional, we can use the diagonal.
+    if (not T) or (T == 1):
+        Ainv = la.inv(x.T@x) 
         uhat2 = residual ** 2
         uhat2_x = uhat2 * x # elementwise multiplication: avoids forming the diagonal matrix (RAM intensive!)
-        cov_se = Ainv @ (x.T@uhat2_x) @ Ainv
+        cov = Ainv @ (x.T@uhat2_x) @ Ainv
     
     # Else we loop over each individual.
     else:
@@ -140,17 +142,16 @@ def robust(x: np.array, residual: np.array, T:int) -> tuple:
         B = np.zeros((K, K)) # initialize 
 
         for i in range(N):
-            idx_i = slice(i*T, (i+1)*T)         # index values for individual i 
-            Omega = np.outer(residual[idx_i], residual[idx_i])  # (T, T) matrix of outer product of i's residuals 
-            B += x[idx_i].T @ Omega @ x[idx_i]  # (K, K) contribution  
+            idx_i = slice(i*T, (i+1)*T) # index values for individual i 
+            Omega = residual[idx_i]@residual[idx_i].T # (T,T) matrix of outer product of i's residuals 
+            B += x[idx_i].T @ Omega @ x[idx_i] # (K,K) contribution 
 
-        Ainv = la.inv(x.T@x)
-        cov_se = Ainv @ B @ Ainv
-
-    robust_se = np.sqrt(np.diag(cov_se)).reshape(-1, 1)
-    return cov_se, robust_se
+        Ainv = la.inv(x.T @ x)
+        cov = Ainv @ B @ Ainv
     
-
+    se = np.sqrt(np.diag(cov)).reshape(-1, 1)
+    return cov, se
+    
 def print_table(
         labels: tuple,
         results: dict,
