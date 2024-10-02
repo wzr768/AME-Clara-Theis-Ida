@@ -45,6 +45,7 @@ def estimate(
     
     names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov']
     results = [b_hat, se, sigma2, t_values, R2, cov]
+    
     return dict(zip(names, results))
 
     
