@@ -43,8 +43,8 @@ def estimate(
         cov, se = robust(x, residual, T)
     t_values = b_hat/se
     
-    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov']
-    results = [b_hat, se, sigma2, t_values, R2, cov]
+    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov','SSR']
+    results = [b_hat, se, sigma2, t_values, R2, cov, SSR]
     
     return dict(zip(names, results))
 
@@ -268,7 +268,7 @@ def wald_test(b_hat, cov, R, r):
     w_stat = ((R @ b_hat - r).T @ la.inv(R @ cov @ R.T) @ (R @ b_hat - r))
     
     # Degrees of freedom is the number of restrictions (number of rows in R)
-    df = R.shape[0]
+    df = 1
     
     # Calculate p-value and critical value
     crit_val = chi2.ppf(0.95, df)
