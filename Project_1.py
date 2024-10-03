@@ -43,7 +43,7 @@ def estimate(
         cov, se = robust(x, residual, T)
     t_values = b_hat/se
     
-    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov','SSR']
+    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov', 'SSR']
     results = [b_hat, se, sigma2, t_values, R2, cov, SSR]
     
     return dict(zip(names, results))
