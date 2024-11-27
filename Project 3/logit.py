@@ -3,7 +3,10 @@ from numpy import random
 from numpy import linalg as la
 from scipy import optimize
 from scipy.stats import norm
+from scipy.stats import t
 from tabulate import tabulate
+import estimation as est
+import pandas as pd
 
 name = 'Logit'
 
@@ -96,3 +99,112 @@ def sim_data(theta: np.ndarray, N:int):
 
     # 3. return 
     return y, x
+
+def compute_ape(thetahat, x, index):
+    """
+    Compute the Average Partial Effect (APE) on the probability of experiencing force.
+
+    Parameters:
+    - thetahat: A numpy array of estimated coefficients.
+    - x: A numpy array of explanatory variables.
+    - index: index of the regressor we want to calculate the average partial effect of
+
+    Returns:
+    - ape: The Average Partial Effect of the regressor we are considering.
+    """
+
+    # Number of observations
+    N = x.shape[0]
+
+    # Compute the baseline probabilities
+    x_baseline = x.copy()
+    x_baseline[:, index] = 0 
+    baseline_probs = predict(thetahat, x_baseline)
+
+    # Compute the counterfactual probabilities 
+    x_counterfactual = x.copy()
+    x_counterfactual[:, index] = 1  
+    counterprobs = predict(thetahat, x_counterfactual)
+
+    # Compute the individual-level difference in probabilities
+    prob_differences = counterprobs - baseline_probs
+
+    # Compute Average Partial Effect
+    ape = np.mean(prob_differences)
+
+    return ape
+
+def properties(x, thetahat, cov, print_out: bool, se: bool, indices, labels):
+    """
+    Compute various properties and statistics for a given dataset and estimated parameters for multiple regressors.
+    
+    Parameters:
+    - x (numpy.ndarray): 2D array representing the dataset with dimensions (N, K),
+                        where N is the number of observations, and K is the number of characteristics.
+    - thetahat (numpy.ndarray): Estimated parameters for the model.
+    - cov (numpy.ndarray): Covariance matrix of the estimated parameters.
+    - print_out (bool): If True, print the results as a DataFrame.
+    - se (bool): If True, calculate standard errors, t-values, and p-values.
+    - indices (list): List of indices corresponding to the regressors we want to calculate the APE for.
+    - labels (list): List of labels corresponding to each regressor.
+    
+    Returns:
+    - If print_out is True, returns a DataFrame containing estimates, standard errors,
+      t-values, and p-values for various model properties.
+    - If print_out is False, returns a numpy.ndarray containing the same information.
+    """
+    # Initialize lists to store the results
+    ape_list = []
+    se_list = []
+    t_values_list = []
+    p_values_list = []
+
+    # Loop through the indices to compute the APE for each regressor
+    for index in indices:
+        ape = compute_ape(thetahat, x, index)
+        ape_list.append(ape)
+
+        # If standard errors (se) are requested, compute them using the delta method
+        if se:
+            # Define a lambda function to calculate the gradient of the APE function
+            qq = lambda theta: compute_ape(theta, x, index)
+            
+            # Calculate the gradient of APE at the estimated parameters (thetahat)
+            g = est.centered_grad(qq, thetahat) 
+            
+            # Standard errors are calculated using the delta method
+            se_ape = np.sqrt(np.diag(g @ cov @ g.T))
+            se_list.append(se_ape[0])  
+            
+            # Calculate t-values using the APE and standard errors
+            t_values = ape / se_ape[0]  
+            t_values_list.append(t_values)
+            
+            # Calculate p-values using the t-distribution (two-tailed test)
+            p_values = 2 * t.sf(np.abs(t_values), df=(x.shape[0] - x.shape[1])).round(4)
+            p_values_list.append(p_values)
+        else:
+            se_list.append(None)
+            t_values_list.append(None)
+            p_values_list.append(None)
+
+    # Organize the results into a DataFrame if `print_out` is True
+    if print_out:
+        # Create a DataFrame with the results and use the labels as the index
+        data = {
+            'Estimate': ape_list,
+            'SE': se_list,
+            't-value': t_values_list,
+            'p-value': p_values_list
+        }
+        df = pd.DataFrame(data, index=labels)  # Use labels for the index
+        df = df.round(4)  # Round the results to 4 decimal places
+        return df
+    else:
+        # If `print_out` is False, return the raw data
+        return {
+            'Estimate': ape_list,
+            'SE': se_list,
+            't-value': t_values_list,
+            'p-value': p_values_list
+        }
