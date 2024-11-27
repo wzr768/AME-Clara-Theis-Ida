@@ -169,18 +169,18 @@ def properties(x, thetahat, cov, print_out: bool, se: bool, indices, labels):
             qq = lambda theta: compute_ape(theta, x, index)
             
             # Calculate the gradient of APE at the estimated parameters (thetahat)
-            g = est.centered_grad(qq, thetahat)  # Assuming `est.centered_grad` is defined elsewhere
+            g = est.centered_grad(qq, thetahat) 
             
             # Standard errors are calculated using the delta method
             se_ape = np.sqrt(np.diag(g @ cov @ g.T))
-            se_list.append(se_ape[0])  # Use the first value if it's a single scalar
+            se_list.append(se_ape[0])  # Add the first element if it's an array
             
             # Calculate t-values using the APE and standard errors
-            t_values = ape / se_ape[0]  # Assuming a scalar SE for each regressor
+            t_values = ape / se_ape[0]  # Use the first element of SE for t-value
             t_values_list.append(t_values)
             
             # Calculate p-values using the t-distribution (two-tailed test)
-            p_values = 2 * t.sf(np.abs(t_values), df=(x.shape[0] - x.shape[1])).round(4)
+            p_values = 2 * t.sf(np.abs(t_values), df=x.shape[0] - x.shape[1]).round(4)
             p_values_list.append(p_values)
         else:
             se_list.append(None)
@@ -197,7 +197,7 @@ def properties(x, thetahat, cov, print_out: bool, se: bool, indices, labels):
             'p-value': p_values_list
         }
         df = pd.DataFrame(data, index=labels)  # Use labels for the index
-        df = df.round(4)  # Round the results to 4 decimal places
+        df = df.round(3)  # Round the results to 4 decimal places
         return df
     else:
         # If `print_out` is False, return the raw data
@@ -207,5 +207,3 @@ def properties(x, thetahat, cov, print_out: bool, se: bool, indices, labels):
             't-value': t_values_list,
             'p-value': p_values_list
         }
-
-
