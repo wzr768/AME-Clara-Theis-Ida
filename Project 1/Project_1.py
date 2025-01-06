@@ -259,7 +259,7 @@ def remove_zero_columns(x, label_x):
     label_nonzero = [label_x[i] for i in range(len(label_x)) if nonzero_cols[i]]
     return x_nonzero, label_nonzero
 
-def wald_test(b_hat, cov, R, r):
+def wald_test(b_hat, cov, R, r, df):
     """
     Performs the Wald test for the hypothesis R @ b_hat = r.
     """
@@ -268,7 +268,7 @@ def wald_test(b_hat, cov, R, r):
     w_stat = ((R @ b_hat - r).T @ la.inv(R @ cov @ R.T) @ (R @ b_hat - r))
     
     # Degrees of freedom is the number of restrictions (number of rows in R)
-    df = 1
+    df = df
     
     # Calculate p-value and critical value
     crit_val = chi2.ppf(0.95, df)
