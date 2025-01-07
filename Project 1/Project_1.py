@@ -2,7 +2,7 @@ import numpy as np
 from numpy import linalg as la
 from tabulate import tabulate
 from scipy.stats import chi2
-
+from scipy.stats import t
 
 def estimate( 
         y: np.ndarray, x: np.ndarray, transform='', T:int=None, robust_se=False
@@ -42,13 +42,15 @@ def estimate(
     if robust_se:
         cov, se = robust(x, residual, T)
     t_values = b_hat/se
+
+    df = len(y) - x.shape[1]  # Degrees of freedom
+    p_values = 2 * (1 - t.cdf(np.abs(t_values), df))
     
-    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov', 'SSR']
-    results = [b_hat, se, sigma2, t_values, R2, cov, SSR]
+    names = ['b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov', 'SSR', 'p_values']
+    results = [b_hat, se, sigma2, t_values, R2, cov, SSR, p_values]
     
     return dict(zip(names, results))
 
-    
 def est_ols( y: np.ndarray, x: np.ndarray) -> np.ndarray:
     """Estimates y on x by ordinary least squares, returns coefficents
 
@@ -156,7 +158,7 @@ def robust( x: np.ndarray, residual: np.ndarray, T:int) -> tuple:
 def print_table(
         labels: tuple,
         results: dict,
-        headers=["", "Beta", "Se", "t-values"],
+        headers=["", "Beta", "Se", "t-values", "p-values"],
         title="Results",
         _lambda:float=None,
         **kwargs
@@ -189,7 +191,8 @@ def print_table(
             name, 
             results.get('b_hat')[i], 
             results.get('se')[i], 
-            results.get('t_values')[i]
+            results.get('t_values')[i],
+            results.get('p_values')[i]
         ]
         table.append(row)
     
