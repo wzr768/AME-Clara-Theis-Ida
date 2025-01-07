@@ -29,7 +29,7 @@ def estimate(
 
     Returns:
         list: Returns a dictionary with the following variables:
-        'b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov'
+        'b_hat', 'se', 'sigma2', 't_values', 'R2', 'cov', 'SSR', 'p_values'
     """
     
     b_hat = est_ols(y, x)  # Estimated coefficients
@@ -171,10 +171,9 @@ def print_table(
         >> labels (tuple): Touple with first a label for y, and then a list of 
         labels for x.
         >> results (dict): The results from a regression. Needs to be in a 
-        dictionary with at least the following keys:
-            'b_hat', 'se', 't_values', 'R2', 'sigma2'
+        dictionary.
         >> headers (list, optional): Column headers. Defaults to 
-        ["", "Beta", "Se", "t-values"].
+        ["", "Beta", "Se", "t-values", "p-values"].
         >> title (str, optional): Table title. Defaults to "Results".
         _lambda (float, optional): Only used with Random effects. 
         Defaults to None.
@@ -208,7 +207,7 @@ def print_table(
         print(f'\u03bb = {_lambda.item():.3f}')
 
 
-def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
+def perm(Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
     """Takes a transformation matrix and performs the transformation on 
     the given vector or matrix.
 
