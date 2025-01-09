@@ -134,7 +134,6 @@ def compute_ape(thetahat, x, index):
 
     return ape
 
-
 def properties(x, thetahat, print_out: bool, se: bool, indices, labels):
     """
     Compute various properties and statistics for a given dataset and estimated parameters for multiple regressors.
