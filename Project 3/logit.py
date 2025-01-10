@@ -118,7 +118,7 @@ def compute_ape(thetahat, x, index):
 
     # Compute the baseline probabilities
     x_baseline = x.copy()
-    x_baseline[:, 1:3] = 0 
+    x_baseline[:, 1:3] = 0 #white baseline
     baseline_probs = predict(thetahat, x_baseline)
 
     # Compute the counterfactual probabilities 
