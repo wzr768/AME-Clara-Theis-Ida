@@ -207,7 +207,7 @@ def print_table(
         print(f'\u03bb = {_lambda.item():.3f}')
 
 
-def perm(Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
+def perm( Q_T: np.ndarray, A: np.ndarray) -> np.ndarray:
     """Takes a transformation matrix and performs the transformation on 
     the given vector or matrix.
 
